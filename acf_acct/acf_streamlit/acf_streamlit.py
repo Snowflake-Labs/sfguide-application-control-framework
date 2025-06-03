@@ -1478,7 +1478,7 @@ class trust_center_page(BasePage):
             st.write("")
             
             tc_scanners_list = pd.DataFrame(session.sql(f"""SELECT IFF((ID IN (SELECT SCANNER_ID FROM P_{st.session_state.app_code}_ACF_DB.TRUST_CENTER.SCANNERS)), True, False)
-                                                            , * FROM SNOWFLAKE.TRUST_CENTER.SCANNERS ORDER BY ID, TRY_TO_DOUBLE(NAME);""").collect()).values.tolist()
+                                                            , NAME, ID, SHORT_DESCRIPTION, DESCRIPTION, SCANNER_PACKAGE_ID, STATE, SCHEDULE, LAST_SCAN_TIMESTAMP FROM SNOWFLAKE.TRUST_CENTER.SCANNERS ORDER BY ID, TRY_TO_DOUBLE(NAME);""").collect()).values.tolist()
             
             #create a dataframe from list_eligible_tasks
             tc_scanners_clmns = ['Select'

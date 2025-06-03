@@ -78,7 +78,8 @@ AS SELECT * FROM METADATA.METADATA_V
       WHERE LOWER(account_locator) = LOWER(CURRENT_ACCOUNT())
       AND LOWER(key) = LOWER('app_mode')
       AND LOWER(value) = LOWER('[[APP_MODE]]'))
-    AND LOWER(account_locator) = LOWER(CURRENT_ACCOUNT()) AND LOWER(key) NOT IN ('auto_enable','app_key');
+    AND LOWER(account_locator) = LOWER(CURRENT_ACCOUNT()) 
+    AND LOWER(key) IN (SELECT LOWER(control_name) FROM METADATA.METADATA_DICTIONARY_V WHERE consumer_visible = TRUE);
 
 GRANT SELECT ON VIEW UTIL_APP.METADATA_C_V TO APPLICATION ROLE APP_ROLE;
 
@@ -522,11 +523,12 @@ CREATE OR REPLACE SECURE PROCEDURE PROCS_APP.LOG_SHARE_INSERT()
     snowflake.execute({sqlText:`CALL UTIL_APP.APP_LOGGER('${account_locator}', '${consumer_name}', '${app_key_local}', '${app_mode}', 'log', 'install', '""', SYSDATE(), 'PROCESSING', '"${current_db.toLocaleLowerCase()}.util_app.allowed_procs_v view created."');`});
     snowflake.execute({sqlText:`CALL UTIL_APP.APP_LOGGER('${account_locator}', '${consumer_name}', '${app_key_local}', '${app_mode}', 'log', 'install', '""', SYSDATE(), 'PROCESSING', '"${current_db.toLocaleLowerCase()}.util_app.metadata_c_v view created."');`});
     snowflake.execute({sqlText:`CALL UTIL_APP.APP_LOGGER('${account_locator}', '${consumer_name}', '${app_key_local}', '${app_mode}', 'log', 'install', '""', SYSDATE(), 'PROCESSING', '"${current_db.toLocaleLowerCase()}.util_app.scanners_c_v view created."');`});
+    if (app_mode.toLocaleLowerCase() != 'free') {
+      snowflake.execute({sqlText:`CALL UTIL_APP.APP_LOGGER('${account_locator}', '${consumer_name}', '${app_key_local}', '${app_mode}', 'log', 'install', '""', SYSDATE(), 'PROCESSING', '"${current_db.toLocaleLowerCase()}.app.counter_reset_task task created."');`});
+    }
     snowflake.execute({sqlText:`CALL UTIL_APP.APP_LOGGER('${account_locator}', '${consumer_name}', '${app_key_local}', '${app_mode}', 'log', 'install', '""', SYSDATE(), 'PROCESSING', '"${current_db.toLocaleLowerCase()}.app.heartbeat_task task created."');`});
     snowflake.execute({sqlText:`CALL UTIL_APP.APP_LOGGER('${account_locator}', '${consumer_name}', '${app_key_local}', '${app_mode}', 'log', 'install', '""', SYSDATE(), 'PROCESSING', '"${current_db.toLocaleLowerCase()}.util_app.request_summary_c_v view created."');`});
-    if (app_mode.toLocaleLowerCase() != 'free') {
-      snowflake.execute({sqlText:`CALL UTIL_APP.APP_LOGGER('${account_locator}', '${consumer_name}', '${app_key_local}', '${app_mode}', 'log', 'install', '""', SYSDATE(), 'PROCESSING', '"${current_db.toLocaleLowerCase()}.util_app.configure_tracker procedure created."');`});
-    }
+    snowflake.execute({sqlText:`CALL UTIL_APP.APP_LOGGER('${account_locator}', '${consumer_name}', '${app_key_local}', '${app_mode}', 'log', 'install', '""', SYSDATE(), 'PROCESSING', '"${current_db.toLocaleLowerCase()}.util_app.configure_tracker procedure created."');`});
     snowflake.execute({sqlText:`CALL UTIL_APP.APP_LOGGER('${account_locator}', '${consumer_name}', '${app_key_local}', '${app_mode}', 'log', 'install', '""', SYSDATE(), 'PROCESSING', '"${current_db.toLocaleLowerCase()}.util_app.register_single_callback procedure created."');`});
     snowflake.execute({sqlText:`CALL UTIL_APP.APP_LOGGER('${account_locator}', '${consumer_name}', '${app_key_local}', '${app_mode}', 'log', 'install', '""', SYSDATE(), 'PROCESSING', '"${current_db.toLocaleLowerCase()}.util_app.streamlit streamlit created."');`});
     snowflake.execute({sqlText:`CALL UTIL_APP.APP_LOGGER('${account_locator}', '${consumer_name}', '${app_key_local}', '${app_mode}', 'log', 'install', '""', SYSDATE(), 'PROCESSING', '"${current_db.toLocaleLowerCase()}.util_app.app_logger procedure created."');`});
@@ -788,7 +790,7 @@ try {
     var limit = '';
     var limit_type = '';
     var limit_enforced = '';
-    var limit_check_logic = '';
+    var limit_check_logic = false;
 
     var results_record_count = 0;
     var results_record_count_distinct = 0;
@@ -868,7 +870,13 @@ try {
           //get limit from METADATA_C_V
           var rset = snowflake.execute({sqlText: `SELECT value FROM UTIL_APP.METADATA_C_V WHERE LOWER(key) = 'limit';`});
           rset.next();
-          limit = parseInt(rset.getColumnValue(1));
+          
+          if (rset.getColumnValue(1).toLocaleLowerCase() == 'unlimited') {
+            limit = rset.getColumnValue(1);
+            limit_check_logic = true
+          } else {
+            limit = parseInt(rset.getColumnValue(1));
+          }
 
           //get limit type METADATA_C_V
           var rset = snowflake.execute({sqlText: `SELECT value FROM UTIL_APP.METADATA_C_V WHERE LOWER(key) = 'limit_type';`});
@@ -896,11 +904,11 @@ try {
           var records_processed_this_interval = parseInt(rset.getColumnValue(1));
 
           //get limit check logic
-          if(limit_type.toLocaleLowerCase() == 'requests') {
+          if (limit_type.toLocaleLowerCase() == 'requests' && String(limit).toLocalLowerCase() != 'unlimited') {
             limit_check_logic = ((requests_processed_this_interval + 1) <= limit);
           }
           
-          if(limit_type.toLocaleLowerCase() == 'records') {
+          if (limit_type.toLocaleLowerCase() == 'records' && String(limit).toLocalLowerCase() != 'unlimited') {
             limit_check_logic = ((limit - records_processed_this_interval) > 0);
           }
 

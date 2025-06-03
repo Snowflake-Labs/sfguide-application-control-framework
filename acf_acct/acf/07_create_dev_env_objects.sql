@@ -82,6 +82,7 @@ CREATE STAGE IF NOT EXISTS ARTIFACTS;
 
 --put template files on stage
 PUT 'file://&{DIR}/application_control_framework/acf_acct/dev_env/templates/*' @ARTIFACTS/templates auto_compress=false overwrite=true;
+PUT 'file://&{DIR}/application_control_framework/acf_acct/dev_env/streamlit/*' @ARTIFACTS/streamlit auto_compress=false overwrite=true;
 
 --create APP_KEY table
 CREATE TABLE IF NOT EXISTS APP.APP_KEY(app_key VARCHAR) AS

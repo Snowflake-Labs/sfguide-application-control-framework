@@ -245,10 +245,14 @@ $$
           }
         }
       } else {
+        var rset3 = snowflake.execute({sqlText: `SELECT default_value FROM P_&{APP_CODE}_ACF_DB.METADATA.METADATA_DICTIONARY WHERE LOWER(control_name) = 'allowed_procs';`});
+        rset3.next();
+        let allowed_procs = rset3.getColumnValue(1);
+
         //onboard consumer if FREE
         if(app_mode.toLocaleLowerCase() == 'free') {
           snowflake.execute({sqlText:`CALL P_&{APP_CODE}_ACF_DB.CONSUMER_MGMT.ONBOARD_CONSUMER('${consumer_account}', '${consumer_name}', OBJECT_CONSTRUCT('app_mode', 'free'
-                                                                                                                                    ,'allowed_procs', 'enrich'
+                                                                                                                                    ,'allowed_procs', '${allowed_procs}'
                                                                                                                                     ,'limit','5'
                                                                                                                                     ,'limit_type','requests'
                                                                                                                                     ,'limit_interval', 'N/A'
@@ -256,14 +260,14 @@ $$
 
 
           //get install count
-          var rset3 = snowflake.execute({sqlText: `SELECT MAX(value) FROM P_&{APP_CODE}_ACF_DB.METADATA.METADATA 
+          var rset4 = snowflake.execute({sqlText: `SELECT MAX(value) FROM P_&{APP_CODE}_ACF_DB.METADATA.METADATA 
                                                   WHERE LOWER(account_locator) = LOWER('${consumer_account}')
                                                   AND LOWER(consumer_name) = LOWER('${consumer_name}')  
                                                   AND LOWER(key) = 'install_count';`});
-          rset3.next();
+          rset4.next();
 
           //update install metadata
-          let install_count = parseInt(rset3.getColumnValue(1));
+          let install_count = parseInt(rset4.getColumnValue(1));
           update_install_metadata(consumer_account, consumer_name, app_key, app_mode, install_count, install_tmstmp);
         }
         
@@ -272,21 +276,21 @@ $$
         //onboard consumer if PAID
         if(app_mode.toLocaleLowerCase() == 'paid') {
           snowflake.execute({sqlText:`CALL P_&{APP_CODE}_ACF_DB.CONSUMER_MGMT.ONBOARD_CONSUMER('${consumer_account}', '${consumer_name}', OBJECT_CONSTRUCT('app_mode', 'paid'
-                                                                                                                                    ,'allowed_procs', 'enrich'
+                                                                                                                                    ,'allowed_procs', '${allowed_procs}'
                                                                                                                                     ,'limit','100000'
                                                                                                                                     ,'limit_type','records'
                                                                                                                                     ,'limit_interval', '30 day'
                                                                                                                                     ,'limit_enforced','Y')::varchar)`});
 
           //get install count
-          var rset3 = snowflake.execute({sqlText: `SELECT MAX(value) FROM P_&{APP_CODE}_ACF_DB.METADATA.METADATA 
+          var rset4 = snowflake.execute({sqlText: `SELECT MAX(value) FROM P_&{APP_CODE}_ACF_DB.METADATA.METADATA 
                                                   WHERE LOWER(account_locator) = LOWER('${consumer_account}')
                                                   AND LOWER(consumer_name) = LOWER('${consumer_name}')  
                                                   AND LOWER(key) = 'install_count';`});
-          rset3.next();
+          rset4.next();
 
           //update install metadata
-          let install_count = parseInt(rset3.getColumnValue(1));
+          let install_count = parseInt(rset4.getColumnValue(1));
           update_install_metadata(consumer_account, consumer_name, app_key, app_mode, install_count, install_tmstmp);
         }
       }

@@ -28,6 +28,10 @@ def create_app_package(app_code, app_pkg_name, source_table_list):
   create_metadata_v = """CREATE OR REPLACE SECURE VIEW """+app_pkg_name+""".METADATA.METADATA_V CHANGE_TRACKING=TRUE COMMENT = '{"origin":"sf_sit","name":"acf","version":{"major":1, "minor":7},"attributes":{"env":"native_app","component":"metadata_v","type":"secure_view"}}'
   AS SELECT * FROM P_""" +app_code+"""_ACF_DB.METADATA.METADATA"""
   
+  #create metadata_dictonary_v view
+  create_metadata_dictionary_v = """CREATE OR REPLACE SECURE VIEW """+app_pkg_name+""".METADATA.METADATA_DICTIONARY_V CHANGE_TRACKING=TRUE COMMENT = '{"origin":"sf_sit","name":"acf","version":{"major":1, "minor":7},"attributes":{"env":"native_app","component":"metadata_v","type":"secure_view"}}'
+  AS SELECT * FROM P_""" +app_code+"""_ACF_DB.METADATA.METADATA_DICTIONARY"""
+  
   #create rules_dictionary_v view
   create_rules_dictionary_v = """CREATE OR REPLACE SECURE VIEW """+app_pkg_name+""".METADATA.RULES_DICTIONARY_V COMMENT = '{"origin":"sf_sit","name":"acf","version":{"major":1, "minor":7},"attributes":{"env":"native_app","component":"rules_dictionary_v","type":"secure_view"}}'
   AS SELECT * FROM P_""" +app_code+"""_ACF_DB.METADATA.RULES_DICTIONARY"""
@@ -44,6 +48,7 @@ def create_app_package(app_code, app_pkg_name, source_table_list):
   
   grant_select_events_master_v = f"GRANT SELECT ON VIEW {app_pkg_name}.EVENTS.EVENTS_MASTER_V TO SHARE IN APPLICATION PACKAGE {app_pkg_name}"
   grant_select_metadata_v = f"GRANT SELECT ON VIEW {app_pkg_name}.METADATA.METADATA_V TO SHARE IN APPLICATION PACKAGE {app_pkg_name}"
+  grant_select_metadata_dictionary_v = f"GRANT SELECT ON VIEW {app_pkg_name}.METADATA.METADATA_DICTIONARY_V TO SHARE IN APPLICATION PACKAGE {app_pkg_name}"
   grant_select_rules_dictionary_v = f"GRANT SELECT ON VIEW {app_pkg_name}.METADATA.RULES_DICTIONARY_V TO SHARE IN APPLICATION PACKAGE {app_pkg_name}"
   grant_select_scanners_v = f"GRANT SELECT ON VIEW {app_pkg_name}.TRUST_CENTER.SCANNERS_V TO SHARE IN APPLICATION PACKAGE {app_pkg_name}"
 
@@ -51,9 +56,9 @@ def create_app_package(app_code, app_pkg_name, source_table_list):
   sql_statements = [create_app_pkg
                     ,grant_ref_usage_to_pkg
                     ,create_sch_versions,create_sch_events,create_sch_metadata,create_sch_trust_center,create_sch_data
-                    ,create_consumer_events_master_v,create_metadata_v,create_rules_dictionary_v,create_scanners_v
+                    ,create_consumer_events_master_v,create_metadata_v,create_metadata_dictionary_v,create_rules_dictionary_v,create_scanners_v
                     ,grant_usage_sch_events,grant_usage_sch_metadata,grant_usage_sch_trust_center,grant_usage_sch_data
-                    ,grant_select_events_master_v,grant_select_metadata_v,grant_select_rules_dictionary_v,grant_select_scanners_v]
+                    ,grant_select_events_master_v,grant_select_metadata_v,grant_select_metadata_dictionary_v,grant_select_rules_dictionary_v,grant_select_scanners_v]
   
   #execute each sql statement
   for stmt in sql_statements:
