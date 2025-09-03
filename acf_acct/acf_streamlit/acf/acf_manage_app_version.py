@@ -126,7 +126,7 @@ COMMENT = '{{"origin":"sf_sit","name":"acf","version":{{"major":1, "minor":7}},"
        f_packages_str = ""
 
        if f_packages != '[]':
-         f_packages_str = f"""PACKAGES = ({', '.join(["'{}'".format(value) for value in f_packages.strip('][').split(",")])})"""
+         f_packages_str = f"""PACKAGES = ({', '.join(["{}".format(value) for value in f_packages.strip('][').split(",")])})"""
        
        func_str += f"""CREATE OR REPLACE SECURE FUNCTION FUNCS_APP.{f_name}{f_signature}
 RETURNS {f_returns}
@@ -159,7 +159,7 @@ $$;
        f_packages_str = ""
 
        if f_packages != '[]':
-         f_packages_str = f"""PACKAGES = ({', '.join(["'{}'".format(value) for value in f_packages.strip('][').split(",")])})"""     
+         f_packages_str = f"""PACKAGES = ({', '.join(["{}".format(value) for value in f_packages.strip('][').split(",")])})"""     
        
 
        f_target_path = func_df.loc[func_df['property'] == 'target_path', 'value'].values[0]
@@ -247,7 +247,7 @@ $$;
        p_packages_str = ""
 
        if p_packages != '[]':
-         p_packages_str = f"""PACKAGES = ({', '.join(["'{}'".format(value) for value in p_packages.strip('][').split(",")])})"""
+         p_packages_str = f"""PACKAGES = ({', '.join(["{}".format(value) for value in p_packages.strip('][').split(",")])})"""
        
        p_target_path = p_df.loc[p_df['property'] == 'target_path', 'value'].values[0]
        p_target_path_str = ""
